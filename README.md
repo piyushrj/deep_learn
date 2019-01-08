@@ -1,0 +1,1 @@
+This repo stores the code for the assignments in the course **CS231n: Convolutional Neural Networks for Image Recognition** taught at **Stanford** and is consistent with the 2018 version of the course. Further details can be found here: [cs231n.github.io](https://cs231n.github.io)
