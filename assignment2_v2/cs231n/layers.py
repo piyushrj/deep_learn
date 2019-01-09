@@ -187,11 +187,15 @@ def batchnorm_forward(x, gamma, beta, bn_param):
         #######################################################################
         mean = np.mean(x, axis=0)
         var = np.var(x, axis=0)
-        x_norm = (x-mean)/(np.sqrt(var)+eps) # normalized x
+        xmu = x-mean # x-mu
+        sqrtvar = np.sqrt(var+eps)
+        isqrtvar = 1./sqrtvar
+        x_norm = xmu*isqrtvar
+        #x_norm = (x-mean)/np.sqrt(var+eps) # normalized x
         out = gamma*x_norm + beta # scale and shift operation
         running_mean = momentum*running_mean + (1-momentum)*mean
         running_var = momentum*running_var + (1-momentum)*var
-        cache = (x, x_norm, mean, var, gamma, beta, N)
+        cache = (x_norm, xmu, var,sqrtvar,isqrtvar, gamma, beta, N, eps)
         #######################################################################
         #                           END OF YOUR CODE                          #
         #######################################################################
@@ -240,15 +244,23 @@ def batchnorm_backward(dout, cache):
     # Referencing the original paper (https://arxiv.org/abs/1502.03167)       #
     # might prove to be helpful.                                              #
     ###########################################################################
-    (x, x_norm, mean, var, gamma, beta, N) = cache
-    #READ THIS : https://kevinzakka.github.io/2016/09/14/batch_normalization/
+    (x_norm, xmu, var,sqrtvar,isqrtvar, gamma, beta, N, eps) = cache
+    #READ THIS : https://kratzert.github.io/2016/02/12/understanding-the-gradient-flow-through-the-batch-normalization-layer.html
     dgamma = np.sum(x_norm*dout, axis=0)
-    dbeta = dout.T.dot(np.ones(N))
+    #dbeta = dout.T.dot(np.ones(N)) or dbeta = np.sum(dout, axis=0)
+    dbeta = np.sum(dout, axis=0)
     dx_norm = gamma*dout
-    dx_std = -1*(x-x_norm)/var*dx_norm
-    dx_var = -1/(np.sqrt(var))*dx_std
-    dx_mean = -1/(np.sqrt(var))*dx_norm + -2*(x-mean)/N*dx_var
-    dx = 1/np.sqrt(var)*dx_norm + 1/N*dx_mean + 2*(x-mean)/N*dx_var
+    dxmu1 = dx_norm*isqrtvar
+    disqrtvar = np.sum(xmu*dx_norm, axis=0)
+    dsqrtvar = -1*disqrtvar/(sqrtvar)**2
+    dvar = 0.5*dsqrtvar/sqrtvar
+    dxmusq = 1./N*np.ones(x_norm.shape)*dvar
+    dxmu2 = 2*xmu*dxmusq
+    dxmu = dxmu1+dxmu2
+    dx1 = 1*dxmu
+    dmu = -1.*np.sum(dxmu, axis=0)
+    dx2 = 1./N*np.ones(x_norm.shape)*dmu
+    dx = dx1+dx2
     
     ###########################################################################
     #                             END OF YOUR CODE                            #
