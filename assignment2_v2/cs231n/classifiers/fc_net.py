@@ -196,9 +196,15 @@ class FullyConnectedNet(object):
             else:
                 self.params['W'+str(i+1)] = np.random.normal(loc=0.0, scale=weight_scale, size=(hidden_dims[i-1], h))
             self.params['b'+str(i+1)] = np.zeros(h)
+            # Initializing parameters for batchnorm
+            if self.normalization=='batchnorm':
+                self.params['gamma'+str(i+1)] = np.ones(h)
+                self.params['beta'+str(i+1)] = np.zeros(h)
         # Last layer 
         self.params['W'+str(self.num_layers)] = np.random.normal(loc=0.0, scale=weight_scale, size=(hidden_dims[-1], num_classes))
         self.params['b'+str(self.num_layers)] = np.zeros(num_classes)
+        
+        
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
@@ -260,7 +266,7 @@ class FullyConnectedNet(object):
         # Forward pass for fully-connected net
         activation_h = list() # list of activations from each hidden layer
         cache_h = list() # list of cache from each hidden layer
-        for i in range(self.num_layers-1):
+        """for i in range(self.num_layers-1):
             # hidden layer activations (fully connected with relu
             if i==0:
                 #First hidden layer
@@ -268,6 +274,22 @@ class FullyConnectedNet(object):
             else:
                 hi, cache_hi = affine_relu_forward(activation_h[-1], self.params['W'+str(i+1)], self.params['b'+str(i+1)])
             
+            activation_h.append(hi)
+            cache_h.append(cache_hi)
+        """
+        for i in range(self.num_layers-1):
+            # hidden layer activations (fully connected with relu
+            if i==0:
+                #First hidden layer
+                if self.normalization=='batchnorm':
+                    hi, cache_hi = affine_batchnorm_relu_forward(X, self.params['W1'], self.params['b1'], self.params['gamma1'], self.params['beta1'], self.bn_params[0])
+                else:
+                    hi, cache_hi = affine_relu_forward(X, self.params['W1'], self.params['b1'])
+            else:
+                if self.normalization=='batchnorm':
+                    hi, cache_hi = affine_batchnorm_relu_forward(activation_h[-1], self.params['W'+str(i+1)], self.params['b'+str(i+1)], self.params['gamma'+str(i+1)], self.params['beta'+str(i+1)], self.bn_params[i])
+                else:
+                    hi, cache_hi = affine_relu_forward(activation_h[-1], self.params['W'+str(i+1)], self.params['b'+str(i+1)])
             activation_h.append(hi)
             cache_h.append(cache_hi)
         # followed by a fully connected layer 
@@ -307,20 +329,26 @@ class FullyConnectedNet(object):
         # dout list in reverse order that is from the last layer to the first
         dout_list = list()
         dout_list.append(dout)
+        
         for i in range(self.num_layers):
             current_layer = self.num_layers-i
             # check if its the last layer
             if(current_layer == self.num_layers):
                 dout_prv_layer, dW_current_layer, db_current_layer = affine_backward(dout, cache_output_fc)
             else:
-                dout_prv_layer, dW_current_layer, db_current_layer = affine_relu_backward(dout_list[-1], cache_h[current_layer-1])
-            
+                if self.normalization=='batchnorm':
+                    dout_prv_layer, dW_current_layer, db_current_layer, dgamma_current_layer, dbeta_current_layer = affine_batchnorm_relu_backward(dout_list[-1], cache_h[current_layer-1])
+                else:
+                    dout_prv_layer, dW_current_layer, db_current_layer = affine_relu_backward(dout_list[-1], cache_h[current_layer-1])
             dout_list.append(dout_prv_layer)
             # Adding the regularization term
             dW_current_layer += 2*self.reg*self.params['W'+str(current_layer)]*0.5
             grads['W'+str(current_layer)] = dW_current_layer
             grads['b'+str(current_layer)] = db_current_layer
-            
+            if(current_layer != self.num_layers and self.normalization=='batchnorm'):
+                grads['gamma'+str(current_layer)] = dgamma_current_layer
+                grads['beta'+str(current_layer)] = dbeta_current_layer
+       
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################
