@@ -282,18 +282,37 @@ class FullyConnectedNet(object):
             if i==0:
                 #First hidden layer
                 if self.normalization=='batchnorm':
-                    hi, cache_hi = affine_batchnorm_relu_forward(X, self.params['W1'], self.params['b1'], self.params['gamma1'], self.params['beta1'], self.bn_params[0])
+                    if self.use_dropout:
+                        hi, cache_hi = affine_batchnorm_relu_dropout_forward(X, self.params['W1'], self.params['b1'], self.params['gamma1'], self.params['beta1'], self.bn_params[0], self.dropout_param)
+                    else:
+                        hi, cache_hi = affine_batchnorm_relu_forward(X, self.params['W1'], self.params['b1'], self.params['gamma1'], self.params['beta1'], self.bn_params[0])
                 elif self.normalization == 'layernorm':
-                    hi, cache_hi = affine_layernorm_relu_forward(X, self.params['W1'], self.params['b1'], self.params['gamma1'], self.params['beta1'], self.bn_params[0])
+                    if self.use_dropout:
+                        hi, cache_hi = affine_layernorm_relu_dropout_forward(X, self.params['W1'], self.params['b1'], self.params['gamma1'], self.params['beta1'], self.bn_params[0], self.dropout_param)
+                    else:
+                        hi, cache_hi = affine_layernorm_relu_forward(X, self.params['W1'], self.params['b1'], self.params['gamma1'], self.params['beta1'], self.bn_params[0])
                 else:
-                    hi, cache_hi = affine_relu_forward(X, self.params['W1'], self.params['b1'])
+                    if self.use_dropout:
+                        hi, cache_hi = affine_relu_dropout_forward(X, self.params['W1'], self.params['b1'], self.dropout_param)
+                    else:
+                        hi, cache_hi = affine_relu_forward(X, self.params['W1'], self.params['b1'])
             else:
                 if self.normalization=='batchnorm':
-                    hi, cache_hi = affine_batchnorm_relu_forward(activation_h[-1], self.params['W'+str(i+1)], self.params['b'+str(i+1)], self.params['gamma'+str(i+1)], self.params['beta'+str(i+1)], self.bn_params[i])
+                    if self.use_dropout:
+                        hi, cache_hi = affine_batchnorm_relu_dropout_forward(activation_h[-1], self.params['W'+str(i+1)], self.params['b'+str(i+1)], self.params['gamma'+str(i+1)], self.params['beta'+str(i+1)], self.bn_params[i], self.dropout_param)
+                    else:
+                        hi, cache_hi = affine_batchnorm_relu_forward(activation_h[-1], self.params['W'+str(i+1)], self.params['b'+str(i+1)], self.params['gamma'+str(i+1)], self.params['beta'+str(i+1)], self.bn_params[i])
                 elif self.normalization=='layernorm':
-                    hi, cache_hi = affine_layernorm_relu_forward(activation_h[-1], self.params['W'+str(i+1)], self.params['b'+str(i+1)], self.params['gamma'+str(i+1)], self.params['beta'+str(i+1)], self.bn_params[i])
+                    if self.use_dropout:
+                        hi, cache_hi = affine_layernorm_relu_dropout_forward(activation_h[-1], self.params['W'+str(i+1)], self.params['b'+str(i+1)], self.params['gamma'+str(i+1)], self.params['beta'+str(i+1)], self.bn_params[i], self.dropout_param)
+                    else:
+                        hi, cache_hi = affine_layernorm_relu_forward(activation_h[-1], self.params['W'+str(i+1)], self.params['b'+str(i+1)], self.params['gamma'+str(i+1)], self.params['beta'+str(i+1)], self.bn_params[i])
                 else:
-                    hi, cache_hi = affine_relu_forward(activation_h[-1], self.params['W'+str(i+1)], self.params['b'+str(i+1)])
+                    if self.use_dropout:
+                        hi, cache_hi = affine_relu_dropout_forward(activation_h[-1], self.params['W'+str(i+1)], self.params['b'+str(i+1)], self.dropout_param)
+                    else:
+                        hi, cache_hi = affine_relu_forward(activation_h[-1], self.params['W'+str(i+1)], self.params['b'+str(i+1)])
+            
             activation_h.append(hi)
             cache_h.append(cache_hi)
         # followed by a fully connected layer 
@@ -341,11 +360,20 @@ class FullyConnectedNet(object):
                 dout_prv_layer, dW_current_layer, db_current_layer = affine_backward(dout, cache_output_fc)
             else:
                 if self.normalization=='batchnorm':
-                    dout_prv_layer, dW_current_layer, db_current_layer, dgamma_current_layer, dbeta_current_layer = affine_batchnorm_relu_backward(dout_list[-1], cache_h[current_layer-1])
+                    if self.use_dropout:
+                        dout_prv_layer, dW_current_layer, db_current_layer, dgamma_current_layer, dbeta_current_layer = affine_batchnorm_relu_dropout_backward(dout_list[-1], cache_h[current_layer-1])
+                    else:
+                        dout_prv_layer, dW_current_layer, db_current_layer, dgamma_current_layer, dbeta_current_layer = affine_batchnorm_relu_backward(dout_list[-1], cache_h[current_layer-1])
                 elif self.normalization =='layernorm':
-                    dout_prv_layer, dW_current_layer, db_current_layer, dgamma_current_layer, dbeta_current_layer = affine_layernorm_relu_backward(dout_list[-1], cache_h[current_layer-1])
+                    if self.use_dropout:
+                        dout_prv_layer, dW_current_layer, db_current_layer, dgamma_current_layer, dbeta_current_layer = affine_layernorm_relu_dropout_backward(dout_list[-1], cache_h[current_layer-1])
+                    else:
+                        dout_prv_layer, dW_current_layer, db_current_layer, dgamma_current_layer, dbeta_current_layer = affine_layernorm_relu_backward(dout_list[-1], cache_h[current_layer-1])
                 else:
-                    dout_prv_layer, dW_current_layer, db_current_layer = affine_relu_backward(dout_list[-1], cache_h[current_layer-1])
+                    if self.use_dropout:
+                        dout_prv_layer, dW_current_layer, db_current_layer = affine_relu_dropout_backward(dout_list[-1], cache_h[current_layer-1])
+                    else:
+                        dout_prv_layer, dW_current_layer, db_current_layer = affine_relu_backward(dout_list[-1], cache_h[current_layer-1])
             dout_list.append(dout_prv_layer)
             # Adding the regularization term
             dW_current_layer += 2*self.reg*self.params['W'+str(current_layer)]*0.5
