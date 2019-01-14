@@ -519,11 +519,51 @@ def conv_forward_naive(x, w, b, conv_param):
     # TODO: Implement the convolutional forward pass.                         #
     # Hint: you can use the function np.pad for padding.                      #
     ###########################################################################
-    pass
+    pad = conv_param['pad']
+    stride = conv_param['stride']
+    x_pad = np.pad(x, ((0,0),(0,0),(pad, pad),(pad, pad)), 'constant')
+    #print('xpad shape')
+    #print(x_pad.shape)
+    N, C, H, W = x.shape
+    F, C, HH, WW = w.shape
+    H_prime = int(1 + (H + 2*pad - HH)/stride)
+    W_prime = int(1 + (W + 2*pad - WW)/stride)
+    #print('H prime: %d and W prime: %d'%(H_prime, W_prime))
+    """
+    FAILED ATTEMPT AT SEMI VECTORIZED IMPLIMENTATION:
+    
+    h_index, w_index = 0, 0
+    conv_list = list()
+    while h_index <= H_prime:
+        while w_index <= W_prime:
+            section = x_pad[:, :, h_index:h_index+HH, w_index:w_index+WW]
+            section_col = section.reshape(section.shape[0], np.product(section.shape[1:]))
+            conv_list.append(section_col)
+            w_index += stride
+        w_index = 0
+        h_index += stride
+    x_col_temp = np.array(conv_list)
+    #print(x_col_temp.shape)
+    x_col = x_col_temp.reshape(x_col_temp.shape[1], x_col_temp.shape[2], x_col_temp.shape[0])
+    # Strechting the weight matrix
+    w_row = w.reshape(w.shape[0], np.product(w.shape[1:]))
+    out = np.dot(w_row, x_col)
+    #print('out shape')
+    #print(out.shape)
+    out = out.reshape(out.shape[1], out.shape[0], out.shape[2])
+    out = out.reshape(out.shape[0], out.shape[1], int(H_prime), int(W_prime))"""
+    
+    out = np.zeros(shape=(N, F, H_prime, W_prime))
+    for n in range(0, N):
+        for f in range(0, F):
+            for h_index in range(H_prime):
+                for w_index in range(W_prime):
+                    out[n,f,h_index, w_index] = np.sum(x_pad[n,:,h_index*stride:h_index*stride+HH,w_index*stride:w_index*stride+WW]*w[f,:,:,:])+b[f]
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
-    cache = (x, w, b, conv_param)
+    cache = (x, x_pad, w, b, H_prime, W_prime, conv_param)
     return out, cache
 
 
@@ -544,7 +584,23 @@ def conv_backward_naive(dout, cache):
     ###########################################################################
     # TODO: Implement the convolutional backward pass.                        #
     ###########################################################################
-    pass
+    x, x_pad, w, b, H_prime, W_prime, conv_param = cache
+    pad = conv_param['pad']
+    stride = conv_param['stride']
+    N, C, H, W = x.shape
+    F, C, HH, WW = w.shape
+    dw = np.zeros(w.shape)
+    dx_pad = np.zeros(x_pad.shape)
+    db = np.zeros(b.shape)
+    for n in range(N):
+        for f in range(F):
+            db[f] += np.sum(dout[n, f])
+            for h_index in range(H_prime):
+                for w_index in range(W_prime):
+                    dw[f,:,:,:] += x_pad[n,:,h_index*stride:h_index*stride+HH, w_index*stride:w_index*stride+WW]*dout[n,f,h_index, w_index]
+                    dx_pad[n,:,h_index*stride:h_index*stride+HH, w_index*stride:w_index*stride+WW] += w[f,:,:,:]*dout[n,f,h_index, w_index]
+    
+    dx = dx_pad[:,:,pad:-pad,pad:-pad]
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
