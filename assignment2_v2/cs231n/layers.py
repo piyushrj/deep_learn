@@ -716,7 +716,10 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     # vanilla version of batch normalization you implemented above.           #
     # Your implementation should be very short; ours is less than five lines. #
     ###########################################################################
-    pass
+    N, C, H, W = x.shape
+    x_reshaped = x.transpose(0,2,3,1).reshape(N*H*W, C)
+    out_reshaped, cache = batchnorm_forward(x_reshaped, gamma, beta, bn_param)
+    out = out_reshaped.reshape(N,H,W,C).transpose(0,3,1,2)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -746,7 +749,10 @@ def spatial_batchnorm_backward(dout, cache):
     # vanilla version of batch normalization you implemented above.           #
     # Your implementation should be very short; ours is less than five lines. #
     ###########################################################################
-    pass
+    N, C, H, W = dout.shape
+    dout_reshaped = dout.transpose(0,2,3,1).reshape(N*H*W, C)
+    dx_reshaped, dgamma, dbeta = batchnorm_backward(dout_reshaped, cache)
+    dx = dx_reshaped.reshape(N,H,W,C).transpose(0,3,1,2)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -782,7 +788,22 @@ def spatial_groupnorm_forward(x, gamma, beta, G, gn_param):
     # the bulk of the code is similar to both train-time batch normalization  #
     # and layer normalization!                                                # 
     ###########################################################################
-    pass
+    N, C, H, W = x.shape
+    x = x.reshape(N*G, C//G*H*W)
+    # Now following steps similar to layer norm
+    mean = np.mean(x, axis=1)
+    var = np.var(x, axis=1)
+    xmu = (x.T-mean).T # x-mu
+    sqrtvar = np.sqrt(var+eps)
+    isqrtvar = 1./sqrtvar
+    x_norm = (xmu.T*isqrtvar).T
+    #x_norm = (x-mean)/np.sqrt(var+eps) # normalized x
+    x_norm_reshaped = (x_norm.reshape(N, C*H*W)).reshape(N, C, H, W)
+    
+    out = gamma[np.newaxis,:,np.newaxis,np.newaxis]*x_norm_reshaped + beta[np.newaxis,:,np.newaxis,np.newaxis] # scale and shift operation
+    #running_mean = momentum*running_mean + (1-momentum)*mean
+    #running_var = momentum*running_var + (1-momentum)*var
+    cache = (x_norm, x_norm_reshaped, xmu, var,sqrtvar,isqrtvar, gamma, beta, G)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -808,7 +829,27 @@ def spatial_groupnorm_backward(dout, cache):
     # TODO: Implement the backward pass for spatial group normalization.      #
     # This will be extremely similar to the layer norm implementation.        #
     ###########################################################################
-    pass
+    (x_norm, x_norm_reshaped, xmu, var,sqrtvar,isqrtvar, gamma, beta, G) = cache
+    _, D = x_norm.shape
+    N, C, H, W = dout.shape
+    #dout_reshaped = dout.reshape(N*G, C//G*H*W)
+    dgamma = np.sum(x_norm_reshaped*dout, axis=(0,2,3), keepdims=True)
+    #dbeta = dout.T.dot(np.ones(N)) or dbeta = np.sum(dout, axis=0)
+    dbeta = np.sum(dout, axis=(0,2,3), keepdims=True)
+    dx_norm = gamma[np.newaxis,:,np.newaxis,np.newaxis]*dout
+    dx_norm = dx_norm.reshape(N*G, C//G*H*W)
+    dxmu1 = (dx_norm.T*isqrtvar).T
+    disqrtvar = np.sum(xmu*dx_norm, axis=1)
+    dsqrtvar = -1*disqrtvar/(sqrtvar)**2
+    dvar = 0.5*dsqrtvar/sqrtvar
+    dxmusq = 1./D*(np.ones(x_norm.shape).T*dvar).T
+    dxmu2 = 2*xmu*dxmusq
+    dxmu = dxmu1+dxmu2
+    dx1 = 1*dxmu
+    dmu = -1.*np.sum(dxmu, axis=1)
+    dx2 = 1./D*(np.ones(x_norm.shape).T*dmu).T
+    dx = dx1+dx2
+    dx = (dx.reshape(N, C*H*W)).reshape(N,C,H,W)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
