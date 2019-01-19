@@ -11,7 +11,8 @@ The following questions have been completed:
 * [Q1](https://github.com/piyushrj/deep_learn/blob/master/assignment2_v2/FullyConnectedNets.ipynb): Fully Connected Neural Network (*Done*)  
 * [Q2](https://github.com/piyushrj/deep_learn/blob/master/assignment2_v2/BatchNormalization.ipynb): Batch Normalization (*Done*)  
 * [Q3](https://github.com/piyushrj/deep_learn/blob/master/assignment2_v2/Dropout.ipynb): Dropout (*Done*)  
-* [Q4](https://github.com/piyushrj/deep_learn/blob/master/assignment2_v2/ConvolutionalNetworks.ipynb): Convolutional Networks (*Done*)   
+* [Q4](https://github.com/piyushrj/deep_learn/blob/master/assignment2_v2/ConvolutionalNetworks.ipynb): Convolutional Networks (*Done*)  
+* [Q5](https://github.com/piyushrj/deep_learn/blob/master/assignment2_v2/PyTorch.ipynb): PyTorch/Tensorflow on CIFAR-10 (*Done in PyTorch*)  
   
   
 **Important**  
