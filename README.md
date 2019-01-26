@@ -14,6 +14,12 @@ The following questions have been completed:
 * [Q4](https://github.com/piyushrj/deep_learn/blob/master/assignment2_v2/ConvolutionalNetworks.ipynb): Convolutional Networks (*Done*)  
 * [Q5](https://github.com/piyushrj/deep_learn/blob/master/assignment2_v2/PyTorch.ipynb): PyTorch/Tensorflow on CIFAR-10 (*Done in PyTorch*)  
   
+## Assignment 3:  
+* [Q1](https://github.com/piyushrj/deep_learn/blob/master/assignment3/RNN_Captioning.ipynb) Image Captioning with Vanilla RNNs (*Done*)  
+* [Q2](https://github.com/piyushrj/deep_learn/blob/master/assignment3/LSTM_Captioning.ipynb) Image Captioning with LSTMs (*Done*)  
+* [Q3](https://github.com/piyushrj/deep_learn/blob/master/assignment3/NetworkVisualization-PyTorch.ipynb) Network Visualization: Saliency maps, Class Visualization, and Fooling Images (*Done in PyTorch*)  
+* [Q4](https://github.com/piyushrj/deep_learn/blob/master/assignment3/StyleTransfer-PyTorch.ipynb) Style Transfer (*Done in PyTorch*)  
+  
   
 **Important**  
 The code particularly in the jupyter notebooks is written such that it would work on Google Colab since I didn't have enough compute on my local machine.  
