@@ -19,6 +19,7 @@ The following questions have been completed:
 * [Q2](https://github.com/piyushrj/deep_learn/blob/master/assignment3/LSTM_Captioning.ipynb) Image Captioning with LSTMs (*Done*)  
 * [Q3](https://github.com/piyushrj/deep_learn/blob/master/assignment3/NetworkVisualization-PyTorch.ipynb) Network Visualization: Saliency maps, Class Visualization, and Fooling Images (*Done in PyTorch*)  
 * [Q4](https://github.com/piyushrj/deep_learn/blob/master/assignment3/StyleTransfer-PyTorch.ipynb) Style Transfer (*Done in PyTorch*)  
+* [Q5](https://github.com/piyushrj/deep_learn/blob/master/assignment3/GANs-PyTorch.ipynb) Generative Adversarial Networks (*Done in PyTorch*)  
   
   
 **Important**  
